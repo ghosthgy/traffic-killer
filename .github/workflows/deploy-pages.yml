@@ -1,42 +1,30 @@
 name: Deploy to GitHub Pages
 
 on:
-  # 推送到 main 分支时自动部署
   push:
-    branches: ["main"]
-  # 也可以在 Actions 页面手动触发
-  workflow_dispatch:
-
-# 权限设置（必须）
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# 防止并发部署冲突
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+    branches:
+      - main # 如果您的預設分支是 master，請將 main 改為 master
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          # 关键这里指定要部署的文件夹
-          path: './dist'
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
 
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
